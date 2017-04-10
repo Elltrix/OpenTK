@@ -15,6 +15,8 @@ namespace OpenGL
         private Matrix4 projection;
         private Matrix4 modelview;
 
+        List<Action> scene = new List<Action>();
+
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -23,8 +25,18 @@ namespace OpenGL
 
             GL.ClearColor(Color4.CornflowerBlue);
 
-            Location = new System.Drawing.Point(50, 800);
+            Location = new System.Drawing.Point(50, 500);
             Size = new System.Drawing.Size(1024, 768);
+
+            scene.Add(() =>
+            {
+                GL.Color3(1.0, 1.0, 1.0);
+                GL.Begin(PrimitiveType.Triangles);
+                GL.Vertex3(-1.0f, -1.0f, 4.0f);
+                GL.Vertex3(1.0f, -1.0f, 4.0f);
+                GL.Vertex3(0.0f, 1.0f, 4.0f);
+                GL.End();
+            });
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -39,15 +51,7 @@ namespace OpenGL
 
             GL.LoadMatrix(ref modelview);
 
-            GL.Begin(PrimitiveType.Triangles);
-
-            GL.Vertex3(-1.0f, -1.0f, 4.0f);
-
-            GL.Vertex3(1.0f, -1.0f, 4.0f);
-
-            GL.Vertex3(0.0f, 1.0f, 4.0f);
-
-            GL.End();
+            scene.ForEach(c => c.Invoke());
 
             SwapBuffers();
         }
@@ -64,17 +68,31 @@ namespace OpenGL
             GL.MatrixMode(MatrixMode.Projection);
 
             GL.LoadMatrix(ref projection);
-
-            
         }
+
+        
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
+            var p = new Vector2(e.X, e.Y);
 
+            var worldCoord = ClickToWorld(p);
+            scene.Add(() =>
+            {
+                GL.PointSize(5);
+                GL.Begin(PrimitiveType.Points);
+                GL.Color3(1.0, 0.0, 0.0);
+                GL.Vertex3(worldCoord.X, worldCoord.Y, 1.01f);
+                GL.End();
+            });
+        }
+
+        private Vector3 ClickToWorld(Vector2 p)
+        {
             var vec = new Vector4(
-                e.X / (float)this.Width * 2f - 1f,
-                -(e.Y / (float)this.Height * 2f - 1f),
+                p.X / (float)this.Width * 2f - 1f,
+                -(p.Y / (float)this.Height * 2f - 1f),
                 1.0f, 1.0f);
 
             var viewInv = Matrix4.Invert(modelview);
@@ -84,6 +102,8 @@ namespace OpenGL
             Vector4.Transform(ref vec, ref viewInv, out vec);
 
             Console.WriteLine($"Click: {Format(vec.X)} {Format(vec.Y)} {Format(vec.Z)}");
+
+            return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
         private string Format(float value)
