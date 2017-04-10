@@ -28,13 +28,35 @@ namespace OpenGL
             Location = new System.Drawing.Point(50, 500);
             Size = new System.Drawing.Size(1024, 768);
 
+            // triangle
+            //scene.Add(() =>
+            //{
+            //    GL.Color3(1.0, 1.0, 1.0);
+            //    GL.Begin(PrimitiveType.Triangles);
+            //    GL.Vertex3(-1.0f, -1.0f, 4.0f);
+            //    GL.Vertex3(1.0f, -1.0f, 4.0f);
+            //    GL.Vertex3(0.0f, 1.0f, 4.0f);
+            //    GL.End();
+            //});
+
+            // circle
             scene.Add(() =>
             {
+                var radius = 1f;
+                var slices = 20;
+                var twicePi = 2f * Math.PI;
+
                 GL.Color3(1.0, 1.0, 1.0);
-                GL.Begin(PrimitiveType.Triangles);
-                GL.Vertex3(-1.0f, -1.0f, 4.0f);
-                GL.Vertex3(1.0f, -1.0f, 4.0f);
-                GL.Vertex3(0.0f, 1.0f, 4.0f);
+                GL.Begin(PrimitiveType.TriangleFan);
+                GL.Vertex3(0f, 0f, 4.0f);
+                for (int i = 0; i <= slices; i++)
+                {
+                    GL.Vertex3(
+                        radius * Math.Cos(i * twicePi / slices), 
+                        radius * Math.Sin(i * twicePi / slices), 
+                        4.0f);
+                }
+                
                 GL.End();
             });
         }
