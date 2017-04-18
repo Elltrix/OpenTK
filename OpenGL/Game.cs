@@ -10,12 +10,67 @@ using OpenTK.Input;
 
 namespace OpenGL
 {
-    internal class SceneObject
+    internal class LinePrimitive: SceneObject
     {
-        public Action Draw { get; set; }
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public Vector3 To { get; set; }
+
+        public LinePrimitive(Vector3 from, Vector3 to)
+            : base(from)
+        {
+            To = to;
+        }
+
+        public override void Draw()
+        {
+            GL.Begin(PrimitiveType.Lines);
+
+            GL.Vertex3(Position);
+
+            GL.Vertex3(To);
+
+            GL.End();
+        }
+    }
+
+    internal class CirclePrimitive : SceneObject
+    {
+        public CirclePrimitive(Vector3 position)
+            : base(position) { }
+
+        public override void Draw()
+        {
+            GL.PushMatrix();
+            GL.Translate(Position);
+
+            var radius = 1f;
+            var slices = 50;
+            var twicePi = 2f * Math.PI;
+
+            GL.Color3(0f, 0f, 1f);
+            GL.Begin(PrimitiveType.TriangleFan);
+            GL.Vertex2(0f,0f);
+            for (int i = 0; i <= slices; i++)
+            {
+                GL.Vertex2(
+                    radius * Math.Cos(i * twicePi / slices),
+                    radius * Math.Sin(i * twicePi / slices));
+            }
+
+            GL.End();
+
+            GL.PopMatrix();
+        }
+    }
+
+    internal abstract class SceneObject
+    {
+        public SceneObject(Vector3 position)
+        {
+            Position = position;
+        }
+        public abstract void Draw();
+
+        public Vector3 Position { get; set; }
     }
 
     internal class Scene
@@ -23,25 +78,21 @@ namespace OpenGL
         List<SceneObject> _scene
             = new List<SceneObject>();
 
-        public void Add(Action draw, float x, float y, float z = 0f)
+        public void Add(SceneObject obj)
         {
-            _scene.Add(new SceneObject
-            {
-                Draw = draw,
-                X = x,
-                Y = y,
-                Z = z
-            });
+            _scene.Add(obj);
+        }
+
+        public void Remove(SceneObject obj)
+        {
+            _scene.Remove(obj);
         }
 
         public void Draw()
         {
             foreach (var obj in _scene)
             {
-                GL.PushMatrix();
-                GL.Translate(obj.X, obj.Y, obj.Z);
                 obj.Draw();
-                GL.PopMatrix();
             }
         }
     }
@@ -63,10 +114,10 @@ namespace OpenGL
 
             Location = new System.Drawing.Point(50, 500);
             Size = new System.Drawing.Size(1024, 768);
-
-            scene.Add(Circle, 4, 4);
-            scene.Add(Circle, -4, -4);
-            scene.Add(Circle, 4, -4);
+            
+            scene.Add(new CirclePrimitive(new Vector3(4f, 4f, 0f)));
+            scene.Add(new CirclePrimitive(new Vector3(-4f, -4f, 0f)));
+            scene.Add(new CirclePrimitive(new Vector3(4f, -4f, 0f)));
         }
 
         private static void Triangle()
@@ -76,25 +127,6 @@ namespace OpenGL
             GL.Vertex2(-1.0f, -1.0f);
             GL.Vertex2(1.0f, -1.0f);
             GL.Vertex2(0.0f, 1.0f);
-            GL.End();
-        }
-
-        private static void Circle()
-        {
-            var radius = 1f;
-            var slices = 50;
-            var twicePi = 2f * Math.PI;
-
-            GL.Color3(0f, 0f, 1f);
-            GL.Begin(PrimitiveType.TriangleFan);
-            GL.Vertex2(0f, 0f);
-            for (int i = 0; i <= slices; i++)
-            {
-                GL.Vertex2(
-                    radius * Math.Cos(i * twicePi / slices),
-                    radius * Math.Sin(i * twicePi / slices));
-            }
-
             GL.End();
         }
 
@@ -151,20 +183,20 @@ namespace OpenGL
 
             GL.LoadMatrix(ref projection);
         }
-
-        Vector3? dragStart = null;
-        Vector3? dragEnd = null;
+        
+        LinePrimitive line = null;
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
 
-            if (!dragStart.HasValue)
+            if (line == null)
             {
                 var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
                 worldCoord.Z = 14.999f;
-                dragStart = worldCoord;
 
+                line = new LinePrimitive(worldCoord, worldCoord);
+                scene.Add(line);
             }
         }
 
@@ -172,9 +204,10 @@ namespace OpenGL
         {
             base.OnMouseUp(e);
 
-            if (dragStart.HasValue)
+            if (line != null)
             {
-                dragStart = dragEnd = null;
+                scene.Remove(line);
+                line = null;
             }
         }
 
@@ -182,13 +215,11 @@ namespace OpenGL
         {
             base.OnMouseMove(e);
 
-            if (dragStart.HasValue)
+            if (line != null)
             {
-                var worldCoord = ClickToWorld(new Vector2(e.X,e.Y));
+                var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
                 worldCoord.Z = 14.999f;
-                dragEnd = worldCoord;
-
-                scene.Add(Point, worldCoord.X, worldCoord.Y, worldCoord.Z);
+                line.To = worldCoord;
             }
         }
 
@@ -205,14 +236,17 @@ namespace OpenGL
             Vector4.Transform(ref vec, ref projInv, out vec);
             Vector4.Transform(ref vec, ref viewInv, out vec);
 
-            //Console.WriteLine($"Click: {Format(vec.X)} {Format(vec.Y)} {Format(vec.Z)}");
-
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
         private string Format(float value)
         {
             return Math.Round(value, 2).ToString().PadLeft(8);
+        }
+
+        private void Log(Vector3 vector)
+        {
+            Console.WriteLine($"{Format(vector.X)} {Format(vector.Y)} {Format(vector.Z)}");
         }
     }
 }
