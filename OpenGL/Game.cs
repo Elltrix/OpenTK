@@ -15,6 +15,7 @@ namespace OpenGL
         public Action Draw { get; set; }
         public float X { get; set; }
         public float Y { get; set; }
+        public float Z { get; set; }
     }
 
     internal class Scene
@@ -22,13 +23,14 @@ namespace OpenGL
         List<SceneObject> _scene
             = new List<SceneObject>();
 
-        public void Add(Action draw, float x, float y)
+        public void Add(Action draw, float x, float y, float z = 0f)
         {
             _scene.Add(new SceneObject
             {
                 Draw = draw,
                 X = x,
-                Y = y
+                Y = y,
+                Z = z
             });
         }
 
@@ -37,7 +39,7 @@ namespace OpenGL
             foreach (var obj in _scene)
             {
                 GL.PushMatrix();
-                GL.Translate(obj.X, obj.Y, 0);
+                GL.Translate(obj.X, obj.Y, obj.Z);
                 obj.Draw();
                 GL.PopMatrix();
             }
@@ -107,6 +109,15 @@ namespace OpenGL
             GL.End();
         }
 
+        private static void Point()
+        {
+            GL.PointSize(5);
+            GL.Begin(PrimitiveType.Points);
+            GL.Color3(1.0, 0.0, 0.0);
+            GL.Vertex2(0f, 0f);
+            GL.End();
+        }
+
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
@@ -141,23 +152,44 @@ namespace OpenGL
             GL.LoadMatrix(ref projection);
         }
 
-        
+        Vector3? dragStart = null;
+        Vector3? dragEnd = null;
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
-            var p = new Vector2(e.X, e.Y);
 
-            var worldCoord = ClickToWorld(p);
-            
-            //scene.Add(() =>
-            //{
-            //    GL.PointSize(5);
-            //    GL.Begin(PrimitiveType.Points);
-            //    GL.Color3(1.0, 0.0, 0.0);
-            //    GL.Vertex2(worldCoord.X, worldCoord.Y);
-            //    GL.End();
-            //});
+            if (!dragStart.HasValue)
+            {
+                var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
+                worldCoord.Z = 14.999f;
+                dragStart = worldCoord;
+
+            }
+        }
+
+        protected override void OnMouseUp(MouseButtonEventArgs e)
+        {
+            base.OnMouseUp(e);
+
+            if (dragStart.HasValue)
+            {
+                dragStart = dragEnd = null;
+            }
+        }
+
+        protected override void OnMouseMove(MouseMoveEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            if (dragStart.HasValue)
+            {
+                var worldCoord = ClickToWorld(new Vector2(e.X,e.Y));
+                worldCoord.Z = 14.999f;
+                dragEnd = worldCoord;
+
+                scene.Add(Point, worldCoord.X, worldCoord.Y, worldCoord.Z);
+            }
         }
 
         private Vector3 ClickToWorld(Vector2 p)
@@ -165,7 +197,7 @@ namespace OpenGL
             var vec = new Vector4(
                 p.X / (float)this.Width * 2f - 1f,
                 -(p.Y / (float)this.Height * 2f - 1f),
-                -4f, 1.0f);
+                0f, 1f);
 
             var viewInv = Matrix4.Invert(modelview);
             var projInv = Matrix4.Invert(projection);
@@ -173,7 +205,7 @@ namespace OpenGL
             Vector4.Transform(ref vec, ref projInv, out vec);
             Vector4.Transform(ref vec, ref viewInv, out vec);
 
-            Console.WriteLine($"Click: {Format(vec.X)} {Format(vec.Y)} {Format(vec.Z)}");
+            //Console.WriteLine($"Click: {Format(vec.X)} {Format(vec.Y)} {Format(vec.Z)}");
 
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
