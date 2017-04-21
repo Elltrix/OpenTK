@@ -95,6 +95,25 @@ namespace OpenGL
                 obj.Draw();
             }
         }
+
+        public void Compare(Matrix4 modelview, Vector3 ray)
+        {
+            foreach (var item in _scene)
+            {
+                if (item is CirclePrimitive)
+                {
+                    // ray is already in world coords, so is comparable to item positions.
+                    // only ray is pointing in the wrong direction, i.e. from world origin to the near plane
+                    Vector4 pos = new Vector4(item.Position.X, item.Position.Y, item.Position.Z, 0f);
+                    Vector4.Transform(ref modelview, ref pos, out pos);
+
+                    var nCircle = new Vector3(pos.X, pos.Y, -16f).Normalized();
+                    var nRay = ray.Normalized();
+                    var dot = Vector3.Dot(nCircle,nRay);
+                    var angle = Math.Acos(dot);
+                }
+            }
+        }
     }
 
     internal class Game : GameWindow
@@ -116,8 +135,8 @@ namespace OpenGL
             Size = new System.Drawing.Size(1024, 768);
             
             scene.Add(new CirclePrimitive(new Vector3(4f, 4f, 0f)));
-            scene.Add(new CirclePrimitive(new Vector3(-4f, -4f, 0f)));
-            scene.Add(new CirclePrimitive(new Vector3(4f, -4f, 0f)));
+            //scene.Add(new CirclePrimitive(new Vector3(-4f, -4f, 0f)));
+            //scene.Add(new CirclePrimitive(new Vector3(4f, -4f, 0f)));
         }
 
         private static void Triangle()
@@ -193,7 +212,9 @@ namespace OpenGL
             if (line == null)
             {
                 var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
-                worldCoord.Z = 14.999f;
+                worldCoord.Z = 14.999f; // just in front of the near plane
+
+                scene.Compare(modelview, worldCoord);
 
                 line = new LinePrimitive(worldCoord, worldCoord);
                 scene.Add(line);
@@ -218,7 +239,7 @@ namespace OpenGL
             if (line != null)
             {
                 var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
-                worldCoord.Z = 14.999f;
+                worldCoord.Z = 14.999f; // just in front of the near plane
                 line.To = worldCoord;
             }
         }
