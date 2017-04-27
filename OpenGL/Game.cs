@@ -10,7 +10,7 @@ using OpenTK.Input;
 
 namespace OpenGL
 {
-    internal class LinePrimitive: SceneObject
+    internal class LinePrimitive : SceneObject
     {
         public Vector3 To { get; set; }
 
@@ -18,10 +18,12 @@ namespace OpenGL
             : base(from)
         {
             To = to;
+            Color = new Color4(1f, 0f, 1f, 1f);
         }
 
         public override void Draw()
         {
+            GL.Color4(Color);
             GL.Begin(PrimitiveType.Lines);
 
             GL.Vertex3(Position);
@@ -34,26 +36,30 @@ namespace OpenGL
 
     internal class CirclePrimitive : SceneObject
     {
+        public float Radius { get; private set; } = 1.0f;
+
         public CirclePrimitive(Vector3 position)
-            : base(position) { }
+            : base(position)
+        {
+            Color = new Color4(0f, 0f, 1f, 1f);
+        }
 
         public override void Draw()
         {
             GL.PushMatrix();
             GL.Translate(Position);
 
-            var radius = 1f;
             var slices = 50;
             var twicePi = 2f * Math.PI;
 
-            GL.Color3(0f, 0f, 1f);
+            GL.Color4(Color);
             GL.Begin(PrimitiveType.TriangleFan);
-            GL.Vertex2(0f,0f);
+            GL.Vertex2(0f, 0f);
             for (int i = 0; i <= slices; i++)
             {
                 GL.Vertex2(
-                    radius * Math.Cos(i * twicePi / slices),
-                    radius * Math.Sin(i * twicePi / slices));
+                    Radius * Math.Cos(i * twicePi / slices),
+                    Radius * Math.Sin(i * twicePi / slices));
             }
 
             GL.End();
@@ -64,6 +70,9 @@ namespace OpenGL
 
     internal abstract class SceneObject
     {
+        public Color4 Color { get; set; }
+
+
         public SceneObject(Vector3 position)
         {
             Position = position;
@@ -96,6 +105,8 @@ namespace OpenGL
             }
         }
 
+        public IEnumerable<SceneObject> Objects { get { return _scene; } }
+
         public void Compare(Matrix4 modelview, Vector3 ray)
         {
             foreach (var item in _scene)
@@ -109,7 +120,7 @@ namespace OpenGL
 
                     var nCircle = new Vector3(pos.X, pos.Y, -16f).Normalized();
                     var nRay = ray.Normalized();
-                    var dot = Vector3.Dot(nCircle,nRay);
+                    var dot = Vector3.Dot(nCircle, nRay);
                     var angle = Math.Acos(dot);
                 }
             }
@@ -133,10 +144,10 @@ namespace OpenGL
 
             Location = new System.Drawing.Point(50, 500);
             Size = new System.Drawing.Size(1024, 768);
-            
+
             scene.Add(new CirclePrimitive(new Vector3(4f, 4f, 0f)));
-            //scene.Add(new CirclePrimitive(new Vector3(-4f, -4f, 0f)));
-            //scene.Add(new CirclePrimitive(new Vector3(4f, -4f, 0f)));
+            scene.Add(new CirclePrimitive(new Vector3(-4f, -4f, 0f)));
+            scene.Add(new CirclePrimitive(new Vector3(4f, -4f, 0f)));
         }
 
         private static void Triangle()
@@ -202,33 +213,97 @@ namespace OpenGL
 
             GL.LoadMatrix(ref projection);
         }
-        
+
         LinePrimitive line = null;
+
+        CirclePrimitive from = null;
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
-
-            if (line == null)
+            
+            var obj = IntersectWithScene(e.X, e.Y, ClientRectangle.Width, ClientRectangle.Height);
+            if (obj != null)
             {
-                var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
-                worldCoord.Z = 14.999f; // just in front of the near plane
 
-                scene.Compare(modelview, worldCoord);
-
-                line = new LinePrimitive(worldCoord, worldCoord);
+                obj.Color = new Color4(1f, 1f, 0f, 0f);
+                line = new LinePrimitive(obj.Position, obj.Position);
                 scene.Add(line);
+                from = obj;
             }
+
+
+            //if (line == null)
+            //{
+            //    var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
+            //    worldCoord.Z = 14.999f; // just in front of the near plane
+
+            //    scene.Compare(modelview, worldCoord);
+
+            //    line = new LinePrimitive(worldCoord, worldCoord);
+            //    scene.Add(line);
+            //}
+        }
+
+        private CirclePrimitive IntersectWithScene(float x, float y, int width, int height)
+        {
+            var p1 = Unproject(new Vector3(x, y, -1.5f), width, height);
+            var p2 = Unproject(new Vector3(x, y, 1.0f), width, height);
+
+            Vector3 ray_pos = p1;
+            Vector3 ray_dir = (p2 - p1).Normalized();
+
+            foreach (CirclePrimitive circle in scene.Objects.Where(c => c is CirclePrimitive))
+            {
+                var t = Vector3.Dot((ray_pos - circle.Position), ray_dir);
+                var distanceAlongRay = -t;
+                var distanceToSphereOrigin = ((ray_pos - circle.Position) - t * ray_dir).Length;
+                var isIntersect = distanceToSphereOrigin <= circle.Radius;
+                Console.WriteLine($"ToOrigin: {distanceToSphereOrigin}     Intersect: {isIntersect}");
+                if (isIntersect)
+                {
+                    return circle;
+                }
+            }
+            return null;
+        }
+
+        private Vector3 Unproject(Vector3 mouse, int width, int height)
+        {
+            Vector4 vec;
+
+            vec.X = 2.0f * mouse.X / (float)width - 1;
+            vec.Y = -(2.0f * mouse.Y / (float)height - 1);
+            vec.Z = mouse.Z;
+            vec.W = 1.0f;
+
+            Matrix4 viewInv = Matrix4.Invert(modelview);
+            Matrix4 projInv = Matrix4.Invert(projection);
+
+            Vector4.Transform(ref vec, ref projInv, out vec);
+            Vector4.Transform(ref vec, ref viewInv, out vec);
+
+            if (vec.W > float.Epsilon || vec.W < -float.Epsilon)
+            {
+                vec.X /= vec.W;
+                vec.Y /= vec.W;
+                vec.Z /= vec.W;
+            }
+
+            return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
         protected override void OnMouseUp(MouseButtonEventArgs e)
         {
             base.OnMouseUp(e);
 
-            if (line != null)
+            var obj = IntersectWithScene(e.X, e.Y, ClientRectangle.Width, ClientRectangle.Height);
+            if (obj != null)
             {
-                scene.Remove(line);
+                line.To = obj.Position;
                 line = null;
+                obj.Color = new Color4(1f, 1f, 0f, 0f);                
+                from = null;
             }
         }
 
