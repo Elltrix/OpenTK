@@ -10,38 +10,53 @@ using OpenTK.Input;
 
 namespace OpenGL
 {
-    internal class LinePrimitive : SceneObject
-    {
-        public Vector3 To { get; set; }
 
-        public LinePrimitive(Vector3 from, Vector3 to)
-            : base(from)
+    internal interface IBoundingSphere
+    {
+        Vector3 Position { get; set; }
+        float Radius { get; set; }
+    }
+
+    internal class Spaceship : SceneObject, IBoundingSphere
+    {
+        public float Radius { get; set; } = 1f;
+
+        public Spaceship(Vector3 position)
+            : base(position)
         {
-            To = to;
-            Color = new Color4(1f, 0f, 1f, 1f);
         }
 
         public override void Draw()
         {
-            GL.Color4(Color);
-            GL.Begin(PrimitiveType.Lines);
+            GL.PushMatrix();
+            GL.Translate(Position);
 
-            GL.Vertex3(Position);
-
-            GL.Vertex3(To);
-
+            GL.Color3(0f, 1f, 0f);
+            GL.Begin(PrimitiveType.Triangles);
+            GL.Vertex2(-1.0f, -1.0f);
+            GL.Vertex2(1.0f, -1.0f);
+            GL.Vertex2(0.0f, 1.0f);
             GL.End();
+
+            GL.PopMatrix();
+        }
+
+        public override void Update(double time)
+        {
         }
     }
 
-    internal class CirclePrimitive : SceneObject
+    internal class Planet : SceneObject, IBoundingSphere
     {
-        public float Radius { get; private set; } = 1.0f;
+        public bool Highlighted { get; private set; } = false;
+        public float Radius { get; set; } = 1.0f;
 
-        public CirclePrimitive(Vector3 position)
+        public readonly Color4 DefaultColour = new Color4(0f, 0f, 1f, 1f);
+
+        public Planet(Vector3 position)
             : base(position)
         {
-            Color = new Color4(0f, 0f, 1f, 1f);
+            Color = DefaultColour;
         }
 
         public override void Draw()
@@ -66,6 +81,76 @@ namespace OpenGL
 
             GL.PopMatrix();
         }
+
+        public override void Update(double time)
+        {
+        }
+
+        public void Highlight()
+        {
+            Highlighted = true;
+            Color = new Color4(1f, 1f, 0f, 1f);
+        }
+        public void UnHighlight()
+        {
+            Highlighted = false;
+            Color = DefaultColour;
+        }
+    }
+
+
+
+    internal class PlanetLink : SceneObject
+    {
+        public Vector3 To { get; set; }
+
+        public PlanetLink(Vector3 from, Vector3 to)
+            : base(from)
+        {
+            To = to;
+            Color = new Color4(1f, 0f, 1f, 1f);
+        }
+
+        public override void Draw()
+        {
+            GL.Color4(Color);
+
+            GL.LineWidth(3);
+
+            GL.Begin(PrimitiveType.Lines);
+
+            //GL.Vertex3(Position);
+
+            int dashes = 100;
+            float fiftheth = 1f / dashes;
+            var diff = To - Position;
+            var inc = Vector3.Multiply(diff, fiftheth);
+            var start = Vector3.Multiply(inc, (float)_animation);
+            var acc = new Vector3(Position.X, Position.Y, Position.Z);
+            acc = Vector3.Add(acc, start);
+
+            for (int i = 0; i < dashes; i++)
+            {
+                //acc = Vector3.Add(acc, inc);
+                GL.Vertex3(acc);
+                acc = Vector3.Add(acc, inc);
+            }
+
+            //GL.Vertex3(To);
+
+            GL.End();
+        }
+
+        private double _animation = 0d;
+
+        public override void Update(double time)
+        {
+            _animation += time;
+            if (_animation > 1d)
+            {
+                _animation = 0.0;
+            }
+        }
     }
 
     internal abstract class SceneObject
@@ -78,6 +163,7 @@ namespace OpenGL
             Position = position;
         }
         public abstract void Draw();
+        public abstract void Update(double time);
 
         public Vector3 Position { get; set; }
     }
@@ -105,13 +191,21 @@ namespace OpenGL
             }
         }
 
+        public void Update(double time)
+        {
+            foreach (var obj in _scene)
+            {
+                obj.Update(time);
+            }
+        }
+
         public IEnumerable<SceneObject> Objects { get { return _scene; } }
 
         public void Compare(Matrix4 modelview, Vector3 ray)
         {
             foreach (var item in _scene)
             {
-                if (item is CirclePrimitive)
+                if (item is Planet)
                 {
                     // ray is already in world coords, so is comparable to item positions.
                     // only ray is pointing in the wrong direction, i.e. from world origin to the near plane
@@ -145,39 +239,12 @@ namespace OpenGL
             Location = new System.Drawing.Point(50, 500);
             Size = new System.Drawing.Size(1024, 768);
 
-            scene.Add(new CirclePrimitive(new Vector3(4f, 4f, 0f)));
-            scene.Add(new CirclePrimitive(new Vector3(-4f, -4f, 0f)));
-            scene.Add(new CirclePrimitive(new Vector3(4f, -4f, 0f)));
-        }
-
-        private static void Triangle()
-        {
-            GL.Color3(0f, 1f, 0f);
-            GL.Begin(PrimitiveType.Triangles);
-            GL.Vertex2(-1.0f, -1.0f);
-            GL.Vertex2(1.0f, -1.0f);
-            GL.Vertex2(0.0f, 1.0f);
-            GL.End();
-        }
-
-        private static void Square()
-        {
-            GL.Color3(1f, 0f, 0f);
-            GL.Begin(PrimitiveType.Quads);
-            GL.Vertex2(-1f, -1f);
-            GL.Vertex2(1f, -1f);
-            GL.Vertex2(1f, 1f);
-            GL.Vertex2(-1f, 1f);
-            GL.End();
-        }
-
-        private static void Point()
-        {
-            GL.PointSize(5);
-            GL.Begin(PrimitiveType.Points);
-            GL.Color3(1.0, 0.0, 0.0);
-            GL.Vertex2(0f, 0f);
-            GL.End();
+            scene.Add(new Planet(new Vector3(4f, 4f, 0f)));
+            scene.Add(new Planet(new Vector3(-4f, -4f, 0f)));
+            scene.Add(new Planet(new Vector3(4f, -4f, 0f)));
+            scene.Add(new Planet(new Vector3(-4f, 4f, 0f)));
+            scene.Add(new Spaceship(new Vector3(-8f, 0f, 0f)));
+            scene.Add(new Spaceship(new Vector3(8f, 0f, 0f)));
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -214,55 +281,38 @@ namespace OpenGL
             GL.LoadMatrix(ref projection);
         }
 
-        LinePrimitive line = null;
-
-        CirclePrimitive from = null;
-
-        protected override void OnMouseDown(MouseButtonEventArgs e)
+        protected override void OnUpdateFrame(FrameEventArgs e)
         {
-            base.OnMouseDown(e);
-            
-            var obj = IntersectWithScene(e.X, e.Y, ClientRectangle.Width, ClientRectangle.Height);
-            if (obj != null)
-            {
+            base.OnUpdateFrame(e);
 
-                obj.Color = new Color4(1f, 1f, 0f, 0f);
-                line = new LinePrimitive(obj.Position, obj.Position);
-                scene.Add(line);
-                from = obj;
-            }
-
-
-            //if (line == null)
-            //{
-            //    var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
-            //    worldCoord.Z = 14.999f; // just in front of the near plane
-
-            //    scene.Compare(modelview, worldCoord);
-
-            //    line = new LinePrimitive(worldCoord, worldCoord);
-            //    scene.Add(line);
-            //}
+            scene.Update(e.Time);
         }
 
-        private CirclePrimitive IntersectWithScene(float x, float y, int width, int height)
+
+
+
+        private SceneObject IntersectWithScene(float x, float y, int width, int height)
         {
+            if (modelview == Matrix4.Zero || projection == Matrix4.Zero)
+                return null;
+
             var p1 = Unproject(new Vector3(x, y, -1.5f), width, height);
             var p2 = Unproject(new Vector3(x, y, 1.0f), width, height);
 
             Vector3 ray_pos = p1;
             Vector3 ray_dir = (p2 - p1).Normalized();
 
-            foreach (CirclePrimitive circle in scene.Objects.Where(c => c is CirclePrimitive))
+            foreach (IBoundingSphere sphere in 
+                scene.Objects.Where(c => c is IBoundingSphere))
             {
-                var t = Vector3.Dot((ray_pos - circle.Position), ray_dir);
+                var t = Vector3.Dot((ray_pos - sphere.Position), ray_dir);
                 var distanceAlongRay = -t;
-                var distanceToSphereOrigin = ((ray_pos - circle.Position) - t * ray_dir).Length;
-                var isIntersect = distanceToSphereOrigin <= circle.Radius;
-                Console.WriteLine($"ToOrigin: {distanceToSphereOrigin}     Intersect: {isIntersect}");
+                var distanceToSphereOrigin = ((ray_pos - sphere.Position) - t * ray_dir).Length;
+                var isIntersect = distanceToSphereOrigin <= sphere.Radius;
+
                 if (isIntersect)
                 {
-                    return circle;
+                    return (SceneObject)sphere;
                 }
             }
             return null;
@@ -270,6 +320,9 @@ namespace OpenGL
 
         private Vector3 Unproject(Vector3 mouse, int width, int height)
         {
+            if (modelview == Matrix4.Zero || projection == Matrix4.Zero)
+                return Vector3.Zero;
+
             Vector4 vec;
 
             vec.X = 2.0f * mouse.X / (float)width - 1;
@@ -293,29 +346,105 @@ namespace OpenGL
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
-        protected override void OnMouseUp(MouseButtonEventArgs e)
+        public void DetectPlanet(float mouseX, float mouseY)
         {
-            base.OnMouseUp(e);
+            var sceneObject = IntersectWithScene(
+                mouseX, mouseY, ClientRectangle.Width, ClientRectangle.Height);
 
-            var obj = IntersectWithScene(e.X, e.Y, ClientRectangle.Width, ClientRectangle.Height);
-            if (obj != null)
+            if (sceneObject != _mouseOver)
             {
-                line.To = obj.Position;
-                line = null;
-                obj.Color = new Color4(1f, 1f, 0f, 0f);                
-                from = null;
+                // if changed
+
+                if (sceneObject != null)
+                {
+                    // if moved onto a planet
+                    _mouseOver = sceneObject;
+                    //_mouseOver.Highlight();
+
+                }
+                else
+                {
+                    // if moved off a planet
+
+                    if (_attack != null)
+                    {
+                        // if moving towards another planet
+
+                        if (_attackFrom != _mouseOver)
+                        {
+                            //_mouseOver.UnHighlight();
+                        }
+                    }
+                    else
+                    {
+                        //_mouseOver.UnHighlight();
+                    }
+
+                    _mouseOver = null;
+                }
             }
         }
+
+        bool _mouseDown = false;
+        PlanetLink _attack = null;
+        SceneObject _attackFrom = null;
+        SceneObject _mouseOver = null;
 
         protected override void OnMouseMove(MouseMoveEventArgs e)
         {
             base.OnMouseMove(e);
+            DetectPlanet(e.X, e.Y);
 
-            if (line != null)
+            if (_attack != null)
             {
                 var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
                 worldCoord.Z = 14.999f; // just in front of the near plane
-                line.To = worldCoord;
+                _attack.To = worldCoord;
+            }
+        }
+
+        protected override void OnMouseDown(MouseButtonEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            _mouseDown = true;
+
+            if (_mouseOver != null)
+            {
+                _attack = new PlanetLink(_mouseOver.Position, _mouseOver.Position);
+                _attackFrom = _mouseOver;
+                scene.Add(_attack);
+            }
+        }
+
+        protected override void OnMouseUp(MouseButtonEventArgs e)
+        {
+            base.OnMouseUp(e);
+
+            _mouseDown = false;
+
+            if (_attack != null)
+            {
+                if (_mouseOver != null)
+                {
+                    if (_mouseOver != _attackFrom)
+                    {
+                        _attack.To = _mouseOver.Position;
+                    }
+                    else
+                    {
+                        scene.Remove(_attack);
+                    }
+                }
+                else
+                {
+                    scene.Remove(_attack);
+                }
+
+                _attack = null;
+
+                //_attackFrom.UnHighlight();
+                _attackFrom = null;
             }
         }
 
