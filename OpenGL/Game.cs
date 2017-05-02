@@ -10,6 +10,25 @@ using OpenTK.Input;
 
 namespace OpenGL
 {
+    public class Accumulator
+    {
+        /// <summary>
+        /// Value change per second
+        /// </summary>
+        public float Rate { get; set; }
+        public float Value { get; set; } = 0;
+        public float Limit { get; set; }
+
+        public void Update(double time)
+        {
+            Value += Rate * (float)time;
+            if (Value > Limit)
+            {
+                Value = Limit;
+            }
+            Console.WriteLine(Value);
+        }
+    }
 
     internal interface IBoundingSphere
     {
@@ -19,11 +38,19 @@ namespace OpenGL
 
     internal class Spaceship : SceneObject, IBoundingSphere
     {
+        public Accumulator Power { get; set; }
+
         public float Radius { get; set; } = 1f;
 
         public Spaceship(Vector3 position)
             : base(position)
         {
+            Power = new Accumulator
+            {
+                Rate = 1,
+                Value = 0,
+                Limit = 10
+            };
         }
 
         public override void Draw()
@@ -43,6 +70,7 @@ namespace OpenGL
 
         public override void Update(double time)
         {
+            Power.Update(time);
         }
     }
 
