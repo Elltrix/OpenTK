@@ -11,18 +11,26 @@ namespace OpenGL
 {
     internal class Label : TexturedObject
     {
-        public Label(Vector3 position) : base(position)
+        private string _text;
+
+        public void UpdateText(string text)
         {
+            _text = text;
+        }
+
+        public Label(Vector3 position, string text) : base(position)
+        {
+            _text = text;
         }
 
         public override void Draw()
         {
             GL.BindTexture(TextureTarget.Texture2D, _textureId);
 
-            GL.PushMatrix();
-            GL.Translate(Position);
-            DrawText(0, 0, "Test");
-            GL.PopMatrix();
+            //GL.PushMatrix();
+            //GL.Translate(Position);
+            DrawText(0, 0, _text);
+            //GL.PopMatrix();
         }
 
         public override void Init()
@@ -30,9 +38,9 @@ namespace OpenGL
             LoadTexture("test.png");
         }
 
+
         public override void Update(double time)
         {
-
         }
 
         private void DrawText(int x, int y, string text)

@@ -8,6 +8,11 @@ namespace OpenGL
 {
     internal class Planet : TexturedObject, IBoundingSphere
     {
+        private Accumulator _power
+            = new Accumulator { Rate = 1, Value = 0, Limit = 10 };
+
+        private Label _label;
+
         public bool Highlighted { get; private set; } = false;
         public float Radius { get; set; } = 1.0f;
 
@@ -19,6 +24,19 @@ namespace OpenGL
             Color = DefaultColour;
         }
 
+        public override void Init()
+        {
+            LoadTexture("Textures/GasGiant.png");
+
+            _label = new Label(new Vector3(0f, 0f, 0f), "0");
+            Children.Add(_label);
+
+            foreach (var item in Children)
+            {
+                item.Init();
+            }
+        }
+
         public override void Draw()
         {
             GL.BindTexture(TextureTarget.Texture2D, _textureId);
@@ -26,6 +44,18 @@ namespace OpenGL
             GL.PushMatrix();
             GL.Translate(Position);
 
+            DrawPlanet();
+
+            foreach (var item in Children)
+            {
+                item.Draw();
+            }
+
+            GL.PopMatrix();
+        }
+
+        private void DrawPlanet()
+        {
             var slices = 50;
             var twicePi = 2f * Math.PI;
 
@@ -44,12 +74,13 @@ namespace OpenGL
             }
 
             GL.End();
-
-            GL.PopMatrix();
         }
 
         public override void Update(double time)
         {
+            _power.Update(time);
+            var powerVal = (int)_power.Value;
+            _label.UpdateText(powerVal.ToString());
         }
 
         public void Highlight()
@@ -61,11 +92,6 @@ namespace OpenGL
         {
             Highlighted = false;
             Color = DefaultColour;
-        }
-
-        public override void Init()
-        {
-            LoadTexture("Textures/GasGiant.png");
         }
     }
 

@@ -29,14 +29,16 @@ namespace OpenGL
             Location = new System.Drawing.Point(50, 500);
             Size = new System.Drawing.Size(1024, 768);
 
+            scene.Add(new Spaceship(new Vector3(-8f, 0f, 0f)));
+            scene.Add(new Spaceship(new Vector3(8f, 0f, 0f)));
+
             scene.Add(new Planet(new Vector3(4f, 4f, 0f)));
             scene.Add(new Planet(new Vector3(-4f, -4f, 0f)));
             scene.Add(new Planet(new Vector3(4f, -4f, 0f)));
             scene.Add(new Planet(new Vector3(-4f, 4f, 0f)));
-            scene.Add(new Spaceship(new Vector3(-8f, 0f, 0f)));
-            scene.Add(new Spaceship(new Vector3(8f, 0f, 0f)));
+            
 
-            scene.Add(new Label(new Vector3(-4f, 0f, 0f)));
+            scene.Add(new Label(new Vector3(-4f, 0f, 0f), "Test"));
 
             scene.Init();
         }

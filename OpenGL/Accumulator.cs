@@ -10,13 +10,17 @@ namespace OpenGL
         public float Rate { get; set; }
         public float Value { get; set; } = 0;
         public float Limit { get; set; }
+        public bool Enabled { get; set; } = false;
 
         public void Update(double time)
         {
-            Value += Rate * (float)time;
-            if (Value > Limit)
+            if (Enabled)
             {
-                Value = Limit;
+                Value += Rate * (float)time;
+                if (Value > Limit)
+                {
+                    Value = Limit;
+                }
             }
         }
     }
