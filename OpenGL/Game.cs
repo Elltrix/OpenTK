@@ -109,23 +109,17 @@ namespace OpenGL
             if (modelview == Matrix4.Zero || projection == Matrix4.Zero)
                 return null;
 
-            var p1 = Unproject(new Vector3(x, y, -1.5f), width, height);
-            var p2 = Unproject(new Vector3(x, y, 1.0f), width, height);
-
-            Vector3 ray_pos = p1;
-            Vector3 ray_dir = (p2 - p1).Normalized();
-
-            foreach (IBoundingSphere sphere in
-                scene.Objects.Where(c => c is IBoundingSphere))
+            var ray = new Ray
             {
-                var t = Vector3.Dot((ray_pos - sphere.Position), ray_dir);
-                var distanceAlongRay = -t;
-                var distanceToSphereOrigin = ((ray_pos - sphere.Position) - t * ray_dir).Length;
-                var isIntersect = distanceToSphereOrigin <= sphere.Radius;
+                From = Unproject(new Vector3(x, y, -1.5f), width, height),
+                To = Unproject(new Vector3(x, y, 1.0f), width, height)
+            };
 
-                if (isIntersect)
+            foreach (SceneObject sceneObject in scene.Objects)
+            {
+                if (sceneObject.Intersect(ray))
                 {
-                    return (SceneObject)sphere;
+                    return sceneObject;
                 }
             }
             return null;
@@ -161,47 +155,55 @@ namespace OpenGL
 
         public void DetectPlanet(float mouseX, float mouseY)
         {
-            var sceneObject = IntersectWithScene(
+            SceneObject sceneObject = IntersectWithScene(
                 mouseX, mouseY, ClientRectangle.Width, ClientRectangle.Height);
 
-            if (sceneObject != _mouseOver)
+            if (sceneObject is LinkableObject)
             {
-                // if changed
+                var linkableObject = (LinkableObject)sceneObject;
 
-                if (sceneObject != null)
+                if (linkableObject != _mouseOver)
                 {
-                    // if moved onto a planet
-                    _mouseOver = sceneObject;
-                    //_mouseOver.Highlight();
+                    // if changed
 
-                }
-                else
-                {
-                    // if moved off a planet
-
-                    if (_attack != null)
+                    if (linkableObject != null)
                     {
-                        // if moving towards another planet
+                        // if moved onto a planet
+                        _mouseOver = linkableObject;
+                        //_mouseOver.Highlight();
 
-                        if (_attackFrom != _mouseOver)
-                        {
-                            //_mouseOver.UnHighlight();
-                        }
                     }
                     else
                     {
-                        //_mouseOver.UnHighlight();
-                    }
+                        // if moved off a planet
 
-                    _mouseOver = null;
+                        if (_attack != null)
+                        {
+                            // if moving towards another planet
+
+                            if (_attackFrom != _mouseOver)
+                            {
+                                //_mouseOver.UnHighlight();
+                            }
+                        }
+                        else
+                        {
+                            //_mouseOver.UnHighlight();
+                        }
+
+                        _mouseOver = null;
+                    }
                 }
             }
+
+            
         }
 
         bool _mouseDown = false;
-        PlanetLink _attack = null;
-        SceneObject _attackFrom = null;
-        SceneObject _mouseOver = null;
+        UserLine _attack = null;
+
+        LinkableObject _attackFrom = null;
+        LinkableObject _mouseOver = null;
 
         protected override void OnMouseMove(MouseMoveEventArgs e)
         {
@@ -224,7 +226,7 @@ namespace OpenGL
 
             if (_mouseOver != null)
             {
-                _attack = new PlanetLink(_mouseOver.Position, _mouseOver.Position);
+                _attack = new UserLine(_mouseOver.Position, _mouseOver.Position);
                 _attackFrom = _mouseOver;
                 scene.Add(_attack);
             }
@@ -238,11 +240,23 @@ namespace OpenGL
 
             if (_attack != null)
             {
+                // you are dragging a line
+
                 if (_mouseOver != null)
                 {
+                    // you are currently over a planet
+
                     if (_mouseOver != _attackFrom)
                     {
+                        // you are on a different planet 
+
                         _attack.To = _mouseOver.Position;
+
+                        var newLink = new ObjectLink(Vector3.Zero, _attackFrom, _mouseOver);
+                        _attackFrom.Links.Add(newLink);
+                        _mouseOver.Links.Add(newLink);
+                        scene.Add(newLink);
+                        scene.Remove(_attack);
                     }
                     else
                     {

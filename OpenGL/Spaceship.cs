@@ -37,6 +37,11 @@ namespace OpenGL
         public override void Init()
         {
         }
+
+        public override bool Intersect(Ray ray)
+        {
+            return false;
+        }
     }
 
 }

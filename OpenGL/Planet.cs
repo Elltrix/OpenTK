@@ -6,15 +6,12 @@ using System.Drawing;
 
 namespace OpenGL
 {
-    internal class Planet : TexturedObject, IBoundingSphere
+    internal class Planet : LinkableObject
     {
-        private Accumulator _power
-            = new Accumulator { Rate = 1, Value = 0, Limit = 10 };
-
+        private Accumulator _power;
         private Label _label;
 
         public bool Highlighted { get; private set; } = false;
-        public float Radius { get; set; } = 1.0f;
 
         public readonly Color4 DefaultColour = new Color4(1f, 1f, 1f, 1f);
 
@@ -22,12 +19,14 @@ namespace OpenGL
             : base(position)
         {
             Color = DefaultColour;
+            Width = Height = 1f;
         }
 
         public override void Init()
         {
             LoadTexture("Textures/GasGiant.png");
 
+            _power = new Accumulator { Rate = 1, Value = 0, Limit = 10, Enabled = true };
             _label = new Label(new Vector3(0f, 0f, 0f), "0");
             Children.Add(_label);
 
@@ -69,8 +68,8 @@ namespace OpenGL
                     Math.Cos(i * twicePi / slices) * 0.5 + 0.5,
                     Math.Sin(i * twicePi / slices) * 0.5 + 0.5);
                 GL.Vertex2(
-                    Radius * Math.Cos(i * twicePi / slices),
-                    Radius * Math.Sin(i * twicePi / slices));
+                    Width * Math.Cos(i * twicePi / slices),
+                    Height * Math.Sin(i * twicePi / slices));
             }
 
             GL.End();
@@ -81,6 +80,16 @@ namespace OpenGL
             _power.Update(time);
             var powerVal = (int)_power.Value;
             _label.UpdateText(powerVal.ToString());
+        }
+
+        public override bool Intersect(Ray ray)
+        {
+            Vector3 ray_dir = (ray.To - ray.From).Normalized();
+            var t = Vector3.Dot((ray.From - Position), ray_dir);
+            var distanceAlongRay = -t;
+            var distanceToSphereOrigin = ((ray.From - Position) - t * ray_dir).Length;
+            var isIntersect = distanceToSphereOrigin <= Width;
+            return isIntersect;
         }
 
         public void Highlight()
@@ -94,5 +103,4 @@ namespace OpenGL
             Color = DefaultColour;
         }
     }
-
 }

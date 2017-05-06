@@ -50,8 +50,11 @@
     <Compile Include="Fonts.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="IBoundingSphere.cs" />
+    <Compile Include="LinkableObject.cs" />
+    <Compile Include="ObjectLink.cs" />
     <Compile Include="Planet.cs" />
-    <Compile Include="PlanetLink.cs" />
+    <Compile Include="Ray.cs" />
+    <Compile Include="UserLine.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scene.cs" />

@@ -81,5 +81,9 @@ namespace OpenGL
             GL.End();
         }
 
+        public override bool Intersect(Ray ray)
+        {
+            return false;
+        }
     }
 }
