@@ -25,24 +25,28 @@ namespace OpenGL
             GL.BindTexture(TextureTarget.Texture2D, 0);
             GL.Begin(PrimitiveType.Lines);
             GL.Color3(0.25f, 0.25f, 0.25f);
-
-
-            //10  1
-            //11
-            // * 1.1
-
-
-            var childToParent = Parent.Position - Child.Position;
-            var childEdge = Vector3.Multiply(childToParent.Normalized(), Child.Width);
-            var p2 = Child.Position + childEdge;
-
-            var localVector = Parent.Position - Child.Position;
-            var increaseVectorLengthBy = Child.Width / localVector.Length;
-            var newChildPosition = Vector3.Multiply(localVector, increaseVectorLengthBy);
             
-            GL.Vertex3(Parent.Position);
+            // draw the line between the edges of the two objects, rather than from their centres
+            var p1 = ScaleBy(Child.Position, Parent.Position, Parent.Width);
+            var p2 = ScaleBy(Parent.Position, Child.Position, Child.Width);
+            
+            GL.Vertex3(p1);
             GL.Vertex3(p2);
             GL.End();
+        }
+
+        /// <summary>
+        /// Scale the vector defined by p1 and p2
+        /// </summary>
+        /// <param name="p1">Starting point of vector</param>
+        /// <param name="p2">Ending point of vector</param>
+        /// <param name="scaler">Factor to scale the vector by</param>
+        /// <returns>The scaled p2</returns>
+        private static Vector3 ScaleBy(Vector3 p1, Vector3 p2, float scaler)
+        {
+            var direction = (p1 - p2).Normalized();
+            var reduction = Vector3.Multiply(direction, scaler);
+            return p2 + reduction;
         }
 
         public override void Init()
