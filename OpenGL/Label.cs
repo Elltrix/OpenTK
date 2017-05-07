@@ -29,7 +29,7 @@ namespace OpenGL
 
             //GL.PushMatrix();
             //GL.Translate(Position);
-            DrawText(0, 0, _text);
+            DrawText(_text);
             //GL.PopMatrix();
         }
 
@@ -43,39 +43,66 @@ namespace OpenGL
         {
         }
 
-        private void DrawText(int x, int y, string text)
+        private void DrawText(string text)
         {
-            float disp_x = 0f;
-
             GL.Begin(PrimitiveType.Quads);
 
             float glyphWidth = (float)Settings.GlyphWidth / (float)_textureWidth;
             float glyphHeight = (float)Settings.GlyphHeight / (float)_textureHeight;
 
+            float letterWidth = 0.5f;
+            float letterHeight = 1f;
+            float lettersToDraw = text.Length;
+            float widthOfLabel = letterWidth * lettersToDraw;
+            float pos_x = -(widthOfLabel / 2);
+            float pos_y = -(letterHeight / 2);
+
             for (int n = 0; n < text.Length; n++)
             {
                 char idx = text[n];
-                float u = (float)(idx % Settings.GlyphsPerLine) * glyphWidth;
-                float v = (float)(idx / Settings.GlyphsPerLine) * glyphHeight;
+                float tex_x = (float)(idx % Settings.GlyphsPerLine) * glyphWidth;
+                float tex_y = (float)(idx / Settings.GlyphsPerLine) * glyphHeight;
+                
+                float halfHeight = letterHeight / 2;
 
-                float letterWidth = 0.5f;
-                float letterHeight = 1f;
+                // bottom left 
+                GL.TexCoord2(
+                    tex_x,
+                    tex_y + glyphHeight);
 
-                GL.TexCoord2(u, v);
-                GL.Vertex2(disp_x - letterWidth/2, letterHeight/2);
+                GL.Vertex2(
+                    pos_x, 
+                    pos_y);
 
-                GL.TexCoord2(u, v + glyphHeight);
-                GL.Vertex2(disp_x - letterWidth/2, -letterHeight/2);
+                // bottom right
+                GL.TexCoord2(
+                    tex_x + glyphWidth,
+                    tex_y + glyphHeight);
 
-                GL.TexCoord2(u + glyphWidth, v + glyphHeight);
-                GL.Vertex2(disp_x + letterWidth/2, -letterHeight/2);
+                GL.Vertex2(
+                    pos_x + letterWidth, 
+                    pos_y);
+                
+                // top right
+                GL.TexCoord2(
+                    tex_x + glyphWidth, 
+                    tex_y);
 
-                GL.TexCoord2(u + glyphWidth, v);
-                GL.Vertex2(disp_x + letterWidth/2, letterHeight/2);
+                GL.Vertex2(
+                    pos_x + letterWidth, 
+                    pos_y + letterHeight);
 
-                disp_x += letterWidth;
+                // top left
+                GL.TexCoord2(
+                    tex_x, 
+                    tex_y);
+
+                GL.Vertex2(
+                    pos_x, 
+                    pos_y + letterHeight);
 
 
+                pos_x += letterWidth;
             }
 
             GL.End();

@@ -37,9 +37,6 @@ namespace OpenGL
             scene.Add(new Planet(new Vector3(4f, -4f, 0f)));
             scene.Add(new Planet(new Vector3(-4f, 4f, 0f)));
             
-
-            scene.Add(new Label(new Vector3(-4f, 0f, 0f), "Test"));
-
             scene.Init();
         }
 
