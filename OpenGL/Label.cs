@@ -26,11 +26,8 @@ namespace OpenGL
         public override void Draw()
         {
             GL.BindTexture(TextureTarget.Texture2D, _textureId);
-
-            //GL.PushMatrix();
-            //GL.Translate(Position);
+            
             DrawText(_text);
-            //GL.PopMatrix();
         }
 
         public override void Init()
@@ -63,7 +60,6 @@ namespace OpenGL
                 float tex_x = (float)(idx % Settings.GlyphsPerLine) * glyphWidth;
                 float tex_y = (float)(idx / Settings.GlyphsPerLine) * glyphHeight;
                 
-                float halfHeight = letterHeight / 2;
 
                 // bottom left 
                 GL.TexCoord2(

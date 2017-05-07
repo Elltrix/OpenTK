@@ -43,7 +43,7 @@ namespace OpenGL
         {
             foreach (var item in _scene)
             {
-                if (item is Planet)
+                if (item is LinkableObject)
                 {
                     // ray is already in world coords, so is comparable to item positions.
                     // only ray is pointing in the wrong direction, i.e. from world origin to the near plane

@@ -15,6 +15,9 @@ namespace OpenGL
         {
             Parent = parent;
             Child = child;
+
+            Parent.Links.Add(this);
+            Child.Links.Add(this);
         }
 
         public LinkableObject Parent { get; private set; }

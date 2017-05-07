@@ -174,7 +174,7 @@ namespace OpenGL
                     {
                         // if moved off a planet
 
-                        if (_attack != null)
+                        if (_userLink != null)
                         {
                             // if moving towards another planet
 
@@ -197,7 +197,7 @@ namespace OpenGL
         }
 
         bool _mouseDown = false;
-        UserLine _attack = null;
+        UserLine _userLink = null;
 
         LinkableObject _attackFrom = null;
         LinkableObject _mouseOver = null;
@@ -207,11 +207,11 @@ namespace OpenGL
             base.OnMouseMove(e);
             DetectPlanet(e.X, e.Y);
 
-            if (_attack != null)
+            if (_userLink != null)
             {
                 var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
                 worldCoord.Z = 14.999f; // just in front of the near plane
-                _attack.To = worldCoord;
+                _userLink.To = worldCoord;
             }
         }
 
@@ -223,9 +223,9 @@ namespace OpenGL
 
             if (_mouseOver != null)
             {
-                _attack = new UserLine(_mouseOver.Position, _mouseOver.Position);
+                _userLink = new UserLine(_mouseOver.Position, _mouseOver.Position);
                 _attackFrom = _mouseOver;
-                scene.Add(_attack);
+                scene.Add(_userLink);
             }
         }
 
@@ -235,7 +235,7 @@ namespace OpenGL
 
             _mouseDown = false;
 
-            if (_attack != null)
+            if (_userLink != null)
             {
                 // you are dragging a line
 
@@ -245,30 +245,39 @@ namespace OpenGL
 
                     if (_mouseOver != _attackFrom)
                     {
-                        // you are on a different planet 
+                        // you are on a different planet
 
-                        _attack.To = _mouseOver.Position;
-
-                        var newLink = new ObjectLink(Vector3.Zero, _attackFrom, _mouseOver);
-                        _attackFrom.Links.Add(newLink);
-                        _mouseOver.Links.Add(newLink);
-                        scene.Add(newLink);
-                        scene.Remove(_attack);
-                    }
-                    else
-                    {
-                        scene.Remove(_attack);
+                        LinkObjects(_attackFrom, _mouseOver);                        
                     }
                 }
-                else
-                {
-                    scene.Remove(_attack);
-                }
 
-                _attack = null;
-
-                //_attackFrom.UnHighlight();
+                scene.Remove(_userLink);
+                _userLink = null;
                 _attackFrom = null;
+            }
+        }
+
+        private void LinkObjects(LinkableObject parent, LinkableObject child)
+        {
+            bool alreadyLinked = false;
+
+            foreach (var existingLink in parent.Links)
+            {
+                if (existingLink.Child == child)
+                {
+                    alreadyLinked = true;
+                    break;
+                }
+            }
+
+            if (!alreadyLinked)
+            {
+                var newLink = new ObjectLink(
+                    Vector3.Zero,
+                    _attackFrom, 
+                    _mouseOver);                
+
+                scene.Add(newLink);
             }
         }
 
