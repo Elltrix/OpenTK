@@ -8,7 +8,7 @@ namespace OpenGL
     /// A node in the scene graph
     /// An object with visual representation in the game world
     /// </summary>
-    internal abstract class SceneObject
+    public abstract class SceneObject
     {
         public List<SceneObject> Children { get; set; }
             = new List<SceneObject>();

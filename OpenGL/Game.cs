@@ -75,6 +75,8 @@ namespace OpenGL
             scene.Draw();
 
             SwapBuffers();
+
+            _ready = true;
         }
 
 
@@ -150,6 +152,34 @@ namespace OpenGL
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
+        static bool LinesIntersect(Vector3 A, Vector3 B, Vector3 C, Vector3 D)
+        {
+            var CmP = new Vector2(C.X - A.X, C.Y - A.Y);
+            var r = new Vector2(B.X - A.X, B.Y - A.Y);
+            var s = new Vector2(D.X - C.X, D.Y - C.Y);
+
+            float CmPxr = CmP.X * r.Y - CmP.Y * r.X;
+            float CmPxs = CmP.X * s.Y - CmP.Y * s.X;
+            float rxs = r.X * s.Y - r.Y * s.X;
+
+            if (CmPxr == 0f)
+            {
+                // Lines are collinear, and so intersect if they have any overlap
+
+                return ((C.X - A.X < 0f) != (C.X - B.X < 0f))
+                    || ((C.Y - A.Y < 0f) != (C.Y - B.Y < 0f));
+            }
+
+            if (rxs == 0f)
+                return false; // Lines are parallel.
+
+            float rxsr = 1f / rxs;
+            float t = CmPxs * rxsr;
+            float u = CmPxr * rxsr;
+
+            return (t >= 0f) && (t <= 1f) && (u >= 0f) && (u <= 1f);
+        }
+
         public void DetectPlanet(float mouseX, float mouseY)
         {
             SceneObject sceneObject = IntersectWithScene(
@@ -167,29 +197,17 @@ namespace OpenGL
                     {
                         // if moved onto a planet
                         _mouseOver = linkableObject;
-                        //_mouseOver.Highlight();
 
-                    }
-                    else
-                    {
-                        // if moved off a planet
+                    }                    
+                }
+            }
+            else
+            {
+                // just moved off a planet
 
-                        if (_userLink != null)
-                        {
-                            // if moving towards another planet
-
-                            if (_attackFrom != _mouseOver)
-                            {
-                                //_mouseOver.UnHighlight();
-                            }
-                        }
-                        else
-                        {
-                            //_mouseOver.UnHighlight();
-                        }
-
-                        _mouseOver = null;
-                    }
+                if (_mouseOver != null)
+                {
+                    _mouseOver = null;
                 }
             }
 
@@ -197,21 +215,26 @@ namespace OpenGL
         }
 
         bool _mouseDown = false;
-        UserLine _userLink = null;
+        UserLine _line = null;
 
         LinkableObject _attackFrom = null;
         LinkableObject _mouseOver = null;
+        Vector3 _mouseWorldLocation = Vector3.Zero;
+        bool _ready = false;
 
         protected override void OnMouseMove(MouseMoveEventArgs e)
         {
+            if (!_ready) return;
             base.OnMouseMove(e);
             DetectPlanet(e.X, e.Y);
 
-            if (_userLink != null)
+            _mouseWorldLocation = ClickToWorld(new Vector2(e.X, e.Y));
+            _mouseWorldLocation.Z = 14.99f; // just in front of the near plane
+
+            if (_line != null)
             {
-                var worldCoord = ClickToWorld(new Vector2(e.X, e.Y));
-                worldCoord.Z = 14.999f; // just in front of the near plane
-                _userLink.To = worldCoord;
+                
+                _line.To = _mouseWorldLocation;
             }
         }
 
@@ -223,10 +246,14 @@ namespace OpenGL
 
             if (_mouseOver != null)
             {
-                _userLink = new UserLine(_mouseOver.Position, _mouseOver.Position);
+                _line = new AttackLine(_mouseOver.Position, _mouseOver.Position);
                 _attackFrom = _mouseOver;
-                scene.Add(_userLink);
             }
+            else
+            {
+                _line = new CutLine(_mouseWorldLocation, _mouseWorldLocation);                
+            }
+            scene.Add(_line);
         }
 
         protected override void OnMouseUp(MouseButtonEventArgs e)
@@ -235,24 +262,43 @@ namespace OpenGL
 
             _mouseDown = false;
 
-            if (_userLink != null)
+            if (_line != null)
             {
                 // you are dragging a line
 
-                if (_mouseOver != null)
+                if (_line is AttackLine)
                 {
-                    // you are currently over a planet
-
-                    if (_mouseOver != _attackFrom)
+                    if (_mouseOver != null)
                     {
-                        // you are on a different planet
+                        // you are currently over a planet
 
-                        LinkObjects(_attackFrom, _mouseOver);                        
+                        if (_mouseOver != _attackFrom)
+                        {
+                            // you are on a different planet
+
+                            LinkObjects(_attackFrom, _mouseOver);
+                        }
+                    }
+                }
+                else
+                {
+                    // do cutting here
+
+                    foreach (ObjectLink link in scene.Objects.Where(o => o is ObjectLink))
+                    {
+                        var isIntersect 
+                            = LinesIntersect(_line.Position, _line.To, 
+                            link.Parent.Position, link.Child.Position);
+
+                        if (isIntersect)
+                        {
+                            Console.WriteLine("Intersect");
+                        }
                     }
                 }
 
-                scene.Remove(_userLink);
-                _userLink = null;
+                scene.Remove(_line);
+                _line = null;
                 _attackFrom = null;
             }
         }

@@ -1,25 +1,15 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenGL
 {
-    internal class UserLine : SceneObject
+    public class AttackLine : UserLine
     {
-        public Vector3 To { get; set; }
-
-        public UserLine(Vector3 from, Vector3 to)
-            : base(from)
+        public AttackLine(Vector3 from, Vector3 to) 
+            : base(from, to)
         {
-            To = to;
-            Color = new Color4(1f, 1f, 0f, 1f);
         }
-
         public override void Draw()
         {
 

@@ -32,7 +32,7 @@ namespace OpenGL
             // draw the line between the edges of the two objects, rather than from their centres
             var p1 = ScaleBy(Child.Position, Parent.Position, Parent.Width);
             var p2 = ScaleBy(Parent.Position, Child.Position, Child.Width);
-            
+                        
             GL.Vertex3(p1);
             GL.Vertex3(p2);
             GL.End();
