@@ -8,11 +8,11 @@ namespace OpenGL
 {
     internal class Planet : LinkableObject
     {
-        private Accumulator _power;
+        public Accumulator _power { get; set; }
         private Label _label;
 
-        public Accumulator getPower() { return this._power; }
         public bool Highlighted { get; private set; } = false;
+        public bool _ownedBySpaceship { get; set; } = false;
 
         public readonly Color4 DefaultColour = new Color4(1f, 1f, 1f, 1f);
 
@@ -78,6 +78,10 @@ namespace OpenGL
 
         public override void Update(double time)
         {
+            if (_ownedBySpaceship)
+                _power.Rate = 2;
+            else
+                _power.Rate = 1;
             _power.Update(time);
             var powerVal = (int)_power.Value;
             _label.UpdateText(powerVal.ToString());

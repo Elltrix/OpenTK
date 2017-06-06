@@ -152,6 +152,26 @@ namespace OpenGL
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
+        /* cancer
+        AttackLine getLineFromPositions(Vector3 A, Vector3 B)
+        {
+            foreach(SceneObject so in scene.Objects)
+            {
+                if(so is AttackLine)
+                {
+                    AttackLine line = (AttackLine)so;
+                    float bias = 0.5f;
+                    if ((A - line.Position).Length < bias && (B - line.To).Length < bias)
+                    {
+                        Console.WriteLine("successfully mapped");
+                        return line;
+                    }
+                }
+            }
+            return null;
+        }
+        */
+
         static bool LinesIntersect(Vector3 A, Vector3 B, Vector3 C, Vector3 D)
         {
             var CmP = new Vector2(C.X - A.X, C.Y - A.Y);
@@ -252,7 +272,6 @@ namespace OpenGL
             }
             else
             {
-                Console.WriteLine("_mouseOver is null\n");
                 _line = new CutLine(_mouseWorldLocation, _mouseWorldLocation);                
             }
             scene.Add(_line);
@@ -276,14 +295,16 @@ namespace OpenGL
 
                         if (_mouseOver != _attackFrom)
                         {
-                            if (_attackFrom is Spaceship)
-                                Console.WriteLine("parent was a spaceship! which is linking to something");
                             // you are on a different planet
                             LinkObjects(_attackFrom, _mouseOver);
                             if (_mouseOver is Planet)
-                                ((Planet)_mouseOver).getPower().Enabled = true;
+                            {
+                                ((Planet)_mouseOver)._power.Enabled = true;
+                                if (_attackFrom is Spaceship)
+                                    ((Planet)_mouseOver)._ownedBySpaceship = true;
+                            }
                             else if (_attackFrom is Planet)
-                                ((Planet)_attackFrom).getPower().Enabled = true;
+                                ((Planet)_attackFrom)._power.Enabled = true;
                         }
                     }
                 }
@@ -299,7 +320,8 @@ namespace OpenGL
 
                         if (isIntersect)
                         {
-                            Console.WriteLine("Intersect");
+                            Console.WriteLine("Intersect, NOT trying to remove a line.");
+                            //scene.Remove(this.getLineFromPositions(link.Parent.Position, link.Child.Position));
                         }
                     }
                 }
