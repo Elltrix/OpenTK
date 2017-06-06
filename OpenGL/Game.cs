@@ -297,14 +297,13 @@ namespace OpenGL
                         {
                             // you are on a different planet
                             LinkObjects(_attackFrom, _mouseOver);
-                            if (_mouseOver is Planet)
+                            if(_mouseOver is Planet && _attackFrom is Spaceship)
                             {
                                 ((Planet)_mouseOver)._power.Enabled = true;
-                                if (_attackFrom is Spaceship)
-                                    ((Planet)_mouseOver)._ownedBySpaceship = true;
+                                ((Planet)_mouseOver)._ownedBySpaceship = true;
+                                ((Spaceship)_attackFrom)._power.Enabled = true;
+                                ((Spaceship)_attackFrom)._power.Rate = -2;
                             }
-                            else if (_attackFrom is Planet)
-                                ((Planet)_attackFrom)._power.Enabled = true;
                         }
                     }
                 }
