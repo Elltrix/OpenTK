@@ -4,7 +4,7 @@ using System;
 
 namespace OpenGL
 {
-    internal class Spaceship : SceneObject, IBoundingSphere
+    internal class Spaceship : LinkableObject, IBoundingSphere
     {
         public float Radius { get; set; } = 1f;
 

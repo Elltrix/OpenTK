@@ -196,6 +196,7 @@ namespace OpenGL
                     if (linkableObject != null)
                     {
                         // if moved onto a planet
+                        // mousing over a planet
                         _mouseOver = linkableObject;
 
                     }                    
@@ -251,6 +252,7 @@ namespace OpenGL
             }
             else
             {
+                Console.WriteLine("_mouseOver is null\n");
                 _line = new CutLine(_mouseWorldLocation, _mouseWorldLocation);                
             }
             scene.Add(_line);
@@ -274,9 +276,11 @@ namespace OpenGL
 
                         if (_mouseOver != _attackFrom)
                         {
+                            if (_attackFrom is Spaceship)
+                                Console.WriteLine("parent was a spaceship! which is linking to something");
                             // you are on a different planet
-
                             LinkObjects(_attackFrom, _mouseOver);
+                            ((Planet)_mouseOver).getPower().Enabled = true;
                         }
                     }
                 }

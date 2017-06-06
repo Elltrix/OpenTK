@@ -11,6 +11,7 @@ namespace OpenGL
         private Accumulator _power;
         private Label _label;
 
+        public Accumulator getPower() { return this._power; }
         public bool Highlighted { get; private set; } = false;
 
         public readonly Color4 DefaultColour = new Color4(1f, 1f, 1f, 1f);
@@ -26,7 +27,7 @@ namespace OpenGL
         {
             LoadTexture("Textures/GasGiant.png");
 
-            _power = new Accumulator { Rate = 1, Value = 0, Limit = 10, Enabled = true };
+            _power = new Accumulator { Rate = 1, Value = 0, Limit = 10, Enabled = false };
             _label = new Label(new Vector3(0f, 0f, 0f), "0");
             Children.Add(_label);
 
