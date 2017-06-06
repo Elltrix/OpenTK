@@ -305,17 +305,21 @@ namespace OpenGL
 
         private void LinkObjects(LinkableObject parent, LinkableObject child)
         {
+            // Is a link already created between the two objects?
             bool alreadyLinked = false;
 
             foreach (var existingLink in parent.Links)
             {
                 if (existingLink.Child == child)
                 {
+                    // If already linked, do nothing
                     alreadyLinked = true;
                     break;
                 }
             }
 
+
+            // If not already linked, add a new link between the two positions using  a noramlised vector
             if (!alreadyLinked)
             {
                 var newLink = new ObjectLink(
@@ -343,6 +347,7 @@ namespace OpenGL
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
+        //
         private string Format(float value)
         {
             return Math.Round(value, 2).ToString().PadLeft(8);

@@ -19,7 +19,7 @@ namespace OpenGL
         {
             Position = position;
         }
-
+    
         
         public abstract void Draw();
         public abstract void Update(double time);
