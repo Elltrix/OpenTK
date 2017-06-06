@@ -19,7 +19,7 @@ namespace OpenGL
         {
             base.OnLoad(e);
 
-            Title = "Hello World";
+            Title = "Endless Black";
 
 
             GL.Enable(EnableCap.Texture2D);
@@ -280,7 +280,10 @@ namespace OpenGL
                                 Console.WriteLine("parent was a spaceship! which is linking to something");
                             // you are on a different planet
                             LinkObjects(_attackFrom, _mouseOver);
-                            ((Planet)_mouseOver).getPower().Enabled = true;
+                            if (_mouseOver is Planet)
+                                ((Planet)_mouseOver).getPower().Enabled = true;
+                            else if (_attackFrom is Planet)
+                                ((Planet)_attackFrom).getPower().Enabled = true;
                         }
                     }
                 }

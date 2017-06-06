@@ -11,6 +11,7 @@ namespace OpenGL
         public Spaceship(Vector3 position)
             : base(position)
         {
+            Width = Height = 1f;
         }
 
         public override void Draw()
@@ -40,7 +41,12 @@ namespace OpenGL
 
         public override bool Intersect(Ray ray)
         {
-            return false;
+            Vector3 ray_dir = (ray.To - ray.From).Normalized();
+            var t = Vector3.Dot((ray.From - Position), ray_dir);
+            var distanceAlongRay = -t;
+            var distanceToSphereOrigin = ((ray.From - Position) - t * ray_dir).Length;
+            var isIntersect = distanceToSphereOrigin <= Width;
+            return isIntersect;
         }
     }
 
