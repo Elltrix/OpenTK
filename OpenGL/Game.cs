@@ -297,28 +297,27 @@ namespace OpenGL
                         {
                             // you are on a different planet
                             LinkObjects(_attackFrom, _mouseOver);
-                            /* better functionality but unfinished
                             if (_mouseOver is Planet && _attackFrom is Spaceship)
                             {
                                 ((Planet)_mouseOver)._power.Enabled = true;
                                 ((Planet)_mouseOver)._ownedBySpaceship = true;
                                 ((Spaceship)_attackFrom)._power.Enabled = true;
-                                ((Spaceship)_attackFrom)._power.Rate = -2;
+                                ((Spaceship)_attackFrom)._power.Rate = -((Planet)_mouseOver)._power.Rate;
                             }
-                            */
-                            if (_mouseOver is Planet)
+                            else if(_mouseOver is Spaceship && _attackFrom is Planet)
                             {
-                                ((Planet)_mouseOver)._power.Enabled = true;
-                                if (_attackFrom is Spaceship)
-                                    ((Planet)_mouseOver)._ownedBySpaceship = true;
-                            }
-                            else if (_attackFrom is Planet)
                                 ((Planet)_attackFrom)._power.Enabled = true;
-                            if (_mouseOver is Spaceship)
+                                ((Planet)_attackFrom)._ownedBySpaceship = true;
                                 ((Spaceship)_mouseOver)._power.Enabled = true;
-                            else if (_attackFrom is Planet)
-                                ((Planet)_attackFrom)._power.Enabled = true;
-
+                                ((Spaceship)_mouseOver)._power.Rate = -((Planet)_attackFrom)._power.Rate;
+                            }
+                            else if(_mouseOver is Planet && _attackFrom is Planet)
+                            {
+                                // if planets are linked together, set both their fleet values to the average
+                                float avg = (((Planet)_attackFrom)._power.Value + ((Planet)_mouseOver)._power.Value) / 2;
+                                ((Planet)_attackFrom)._power.Value = avg;
+                                ((Planet)_mouseOver)._power.Value = avg;
+                            }
                         }
                     }
                 }

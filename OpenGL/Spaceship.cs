@@ -43,6 +43,12 @@ namespace OpenGL
             _power.Update(time);
             var powerVal = (int)_power.Value;
             _label.UpdateText(powerVal.ToString());
+            if(powerVal <= 0 && _power.Enabled)
+            {
+                _power.Enabled = false;
+                _power.Value = 0;
+                Console.WriteLine("Spaceship has died.");
+            }
         }
 
         public override void Init()
