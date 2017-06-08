@@ -224,6 +224,11 @@ namespace OpenGL
                     if (this.PlanetOwnedBySpaceship(p, s))
                         return true;
                 }
+                foreach(SceneObject cso in p.Children)
+                {
+                    if (cso is Planet && PlanetOwned((Planet)cso))
+                        return true;
+                }
             }
             return false;
         }
@@ -332,21 +337,28 @@ namespace OpenGL
                                 ((Spaceship)_attackFrom)._power.Enabled = true;
                                 ((Spaceship)_attackFrom)._power.Rate = -((Planet)_mouseOver)._power.Rate;
                             }
-                            else if(_mouseOver is Spaceship && _attackFrom is Planet)
+                            else if (_mouseOver is Spaceship && _attackFrom is Planet)
                             {
                                 ((Planet)_attackFrom)._power.Enabled = true;
                                 ((Planet)_attackFrom)._ownedBySpaceship = true;
                                 ((Spaceship)_mouseOver)._power.Enabled = true;
                                 ((Spaceship)_mouseOver)._power.Rate = -((Planet)_attackFrom)._power.Rate;
                             }
-                            else if(_mouseOver is Planet && _attackFrom is Planet)
+                            else if (_mouseOver is Planet && _attackFrom is Planet)
                             {
                                 if (!this.PlanetOwned((Planet)_mouseOver) && !this.PlanetOwned((Planet)_attackFrom))
+                                {
                                     shouldLink = false;
-                                ((Planet)_mouseOver)._power.Enabled = true;
-                                ((Planet)_attackFrom)._power.Enabled = true;
-                                ((Planet)_attackFrom)._power.Rate = -((Planet)_mouseOver)._power.Rate;
+                                }
+                                else
+                                {
+                                    ((Planet)_mouseOver)._power.Enabled = true;
+                                    ((Planet)_attackFrom)._power.Enabled = true;
+                                    ((Planet)_attackFrom)._power.Rate = -((Planet)_mouseOver)._power.Rate;
+                                }
                             }
+                            else if (_mouseOver is Spaceship && _attackFrom is Spaceship)
+                                shouldLink = false;
                             if(shouldLink)
                                 LinkObjects(_attackFrom, _mouseOver);
                         }
