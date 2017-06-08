@@ -200,6 +200,34 @@ namespace OpenGL
             return (t >= 0f) && (t <= 1f) && (u >= 0f) && (u <= 1f);
         }
 
+        public bool PlanetOwnedBySpaceship(Planet p, Spaceship s)
+        {
+            foreach(SceneObject so in this.scene.Objects)
+            {
+                if(so is ObjectLink)
+                {
+                    ObjectLink link = (ObjectLink)so;
+                    if ((link.Parent == p && link.Child == s) || (link.Parent == s && link.Child == p))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public bool PlanetOwned(Planet p)
+        {
+            foreach(SceneObject so in this.scene.Objects)
+            {
+                if(so is Spaceship)
+                {
+                    Spaceship s = (Spaceship)so;
+                    if (this.PlanetOwnedBySpaceship(p, s))
+                        return true;
+                }
+            }
+            return false;
+        }
+
         public void DetectPlanet(float mouseX, float mouseY)
         {
             SceneObject sceneObject = IntersectWithScene(
@@ -295,8 +323,8 @@ namespace OpenGL
 
                         if (_mouseOver != _attackFrom)
                         {
+                            bool shouldLink = true;
                             // you are on a different planet
-                            LinkObjects(_attackFrom, _mouseOver);
                             if (_mouseOver is Planet && _attackFrom is Spaceship)
                             {
                                 ((Planet)_mouseOver)._power.Enabled = true;
@@ -313,11 +341,14 @@ namespace OpenGL
                             }
                             else if(_mouseOver is Planet && _attackFrom is Planet)
                             {
-                                // if planets are linked together, set both their fleet values to the average
-                                float avg = (((Planet)_attackFrom)._power.Value + ((Planet)_mouseOver)._power.Value) / 2;
-                                ((Planet)_attackFrom)._power.Value = avg;
-                                ((Planet)_mouseOver)._power.Value = avg;
+                                if (!this.PlanetOwned((Planet)_mouseOver) && !this.PlanetOwned((Planet)_attackFrom))
+                                    shouldLink = false;
+                                ((Planet)_mouseOver)._power.Enabled = true;
+                                ((Planet)_attackFrom)._power.Enabled = true;
+                                ((Planet)_attackFrom)._power.Rate = -((Planet)_mouseOver)._power.Rate;
                             }
+                            if(shouldLink)
+                                LinkObjects(_attackFrom, _mouseOver);
                         }
                     }
                 }
