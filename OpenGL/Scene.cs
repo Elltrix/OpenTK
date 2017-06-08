@@ -9,6 +9,7 @@ namespace OpenGL
 {
     internal class Scene
     {
+        // Private data structure
         List<SceneObject> _scene = new List<SceneObject>();
 
         public void Add(SceneObject obj)
@@ -37,6 +38,7 @@ namespace OpenGL
             }
         }
 
+        // Public Accessor 
         public IEnumerable<SceneObject> Objects { get { return _scene; } }
 
         public void Compare(Matrix4 modelview, Vector3 ray)

@@ -54,6 +54,7 @@ namespace OpenGL
             float pos_x = -(widthOfLabel / 2);
             float pos_y = -(letterHeight / 2);
 
+            // loop through for every character in text string, and get the coords for each character and draw them a quad of it from test.png.
             for (int n = 0; n < text.Length; n++)
             {
                 char idx = text[n];
@@ -97,7 +98,7 @@ namespace OpenGL
                     pos_x, 
                     pos_y + letterHeight);
 
-
+                //Shift to right in world coords to draw next letter, so they do not overlap
                 pos_x += letterWidth;
             }
 

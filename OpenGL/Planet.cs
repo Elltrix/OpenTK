@@ -87,14 +87,19 @@ namespace OpenGL
             _label.UpdateText(powerVal.ToString());
         }
 
+        // Bounding sphere intersection
         public override bool Intersect(Ray ray)
         {
+            // Get normalised direction of the ray
             Vector3 ray_dir = (ray.To - ray.From).Normalized();
+            // Get angle between ray and the object's location
             var t = Vector3.Dot((ray.From - Position), ray_dir);
             var distanceAlongRay = -t;
             var distanceToSphereOrigin = ((ray.From - Position) - t * ray_dir).Length;
             var isIntersect = distanceToSphereOrigin <= Width;
             return isIntersect;
+
+            // The Bounding sphere acts as a hitbox for the planet and we find the closest point of the ray to the sphere and compare the gap with the radius
         }
 
         public void Highlight()

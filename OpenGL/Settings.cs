@@ -21,8 +21,6 @@ namespace OpenGL
         // Used to offset rendering glyphs to bitmap
         public static int AtlasOffsetX = -3, AtlassOffsetY = -1;
         public static int FontSize = 14;
-        public static bool BitmapFont = false;
-        public static string FromFile; //= "joystix monospace.ttf";
         public static string FontName = "Consolas";
 
     }

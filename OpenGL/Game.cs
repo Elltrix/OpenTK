@@ -24,7 +24,7 @@ namespace OpenGL
 
             GL.Enable(EnableCap.Texture2D);
 
-            GL.ClearColor(Color4.CornflowerBlue);
+            GL.ClearColor(Color4.SlateGray);
 
             Location = new System.Drawing.Point(50, 500);
             Size = new System.Drawing.Size(1024, 768);
@@ -54,23 +54,7 @@ namespace OpenGL
 
             GL.LoadMatrix(ref modelview);
 
-
-            //GL.Disable(EnableCap.Blend);
-            //Blt(10, 40, TextureWidth, TextureHeight);
             GL.Enable(EnableCap.Blend);
-
-
-            
-            //GL.Enable(EnableCap.Blend);
-            //GL.PushMatrix();
-            //GL.Scale(0.05, 0.05, 0.05);
-            //DrawText(0, 0, "Test");
-            //GL.PopMatrix();
-            //GL.Disable(EnableCap.Blend);
-            //GL.Disable(EnableCap.Texture2D);
-
-
-
 
             scene.Draw();
 
@@ -108,12 +92,16 @@ namespace OpenGL
             if (modelview == Matrix4.Zero || projection == Matrix4.Zero)
                 return null;
 
+            // Get the ray that travels through the scene from the click location
             var ray = new Ray
             {
+                // Converting the mouse location to a world location at the front of the view frustrum
                 From = Unproject(new Vector3(x, y, -1.5f), width, height),
+                // Converting the mouse location to a world location at the back of the view frustrum
                 To = Unproject(new Vector3(x, y, 1.0f), width, height)
             };
 
+            // Find first scene object that interscts with the ray
             foreach (SceneObject sceneObject in scene.Objects)
             {
                 if (sceneObject.Intersect(ray))
@@ -152,25 +140,7 @@ namespace OpenGL
             return new Vector3(vec.X, vec.Y, vec.Z);
         }
 
-        /* cancer
-        AttackLine getLineFromPositions(Vector3 A, Vector3 B)
-        {
-            foreach(SceneObject so in scene.Objects)
-            {
-                if(so is AttackLine)
-                {
-                    AttackLine line = (AttackLine)so;
-                    float bias = 0.5f;
-                    if ((A - line.Position).Length < bias && (B - line.To).Length < bias)
-                    {
-                        Console.WriteLine("successfully mapped");
-                        return line;
-                    }
-                }
-            }
-            return null;
-        }
-        */
+
 
         static bool LinesIntersect(Vector3 A, Vector3 B, Vector3 C, Vector3 D)
         {
@@ -235,6 +205,7 @@ namespace OpenGL
 
         public void DetectPlanet(float mouseX, float mouseY)
         {
+            // Fire a ray into the scene from the mouse location, to get the fist object it colides with 
             SceneObject sceneObject = IntersectWithScene(
                 mouseX, mouseY, ClientRectangle.Width, ClientRectangle.Height);
 

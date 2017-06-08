@@ -19,32 +19,15 @@ namespace OpenGL
 
             using (Bitmap bitmap = new Bitmap(bitmapWidth, bitmapHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
             {
-                Font font;
-                if (!String.IsNullOrWhiteSpace(Settings.FromFile))
-                {
-                    var collection = new PrivateFontCollection();
-                    collection.AddFontFile(Settings.FromFile);
-                    var fontFamily = new FontFamily(Path.GetFileNameWithoutExtension(Settings.FromFile), collection);
-                    font = new Font(fontFamily, Settings.FontSize);
-                }
-                else
-                {
-                    font = new Font(new FontFamily(Settings.FontName), Settings.FontSize);
-                }
+                Font font = new Font(new FontFamily(Settings.FontName), Settings.FontSize);
+
 
                 using (var g = Graphics.FromImage(bitmap))
                 {
-                    if (Settings.BitmapFont)
-                    {
-                        g.SmoothingMode = SmoothingMode.None;
-                        g.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
-                    }
-                    else
-                    {
-                        g.SmoothingMode = SmoothingMode.HighQuality;
-                        g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-                        //g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-                    }
+
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+
 
                     for (int p = 0; p < Settings.GlyphLineCount; p++)
                     {

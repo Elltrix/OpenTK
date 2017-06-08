@@ -4,6 +4,9 @@ namespace OpenGL
 {
     public class Accumulator
     {
+
+        // Models the value and change of value of the planet 
+
         /// <summary>
         /// Value change per second
         /// </summary>
